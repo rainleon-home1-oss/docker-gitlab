@@ -36,7 +36,8 @@ git_service_install() {
       "email": "'${2}'@xxx.com",
       "name": "'${2}'",
       "password":"'${3}'",
-      "is_admin": true
+      "admin": true,
+      "confirm": false
     }'
     # https://docs.gitlab.com/ce/api/users.html#user-creation
     curl -i -X POST \

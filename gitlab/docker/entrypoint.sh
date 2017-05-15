@@ -28,8 +28,11 @@ case $1 in
         args                   pass to service entry point.
                                gitlab's default is: /bin/s6-svscan /app/gitlab/docker/s6/
         "
-        init_git &
-        echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+        if [ "true" != "${GIT_INIT_SKIP}" ]; then
+            init_git & echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>";
+        else
+            echo "skip git init step as GIT_INIT_SKIP=${GIT_INIT_SKIP}"
+        fi
         echo "start git service"
         exec "$@"
         ;;

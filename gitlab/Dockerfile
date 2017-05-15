@@ -1,7 +1,7 @@
 
 # see: https://github.com/gogits/gogs/blob/v0.9.97/Dockerfile
 
-FROM gitlab/gitlab-ce:8.16.4-ce.0
+FROM gitlab/gitlab-ce:9.1.4-ce.0
 
 VOLUME ["/app/gitlab/data"]
 
@@ -27,6 +27,7 @@ ENV LC_ALL en_US.UTF-8
 
 ENV JAVA_OPTS -Duser.language=zh -Duser.region=CN -Dfile.encoding='UTF-8' -Duser.timezone='Asia/Shanghai'
 
+COPY docker/deploy_key.pub /app/gitlab/data/local-git-deploy.pub
 COPY docker/gitlab_utils.sh /app/gitlab/gitlab_utils.sh
 COPY docker/git_init.sh /app/gitlab/git_init.sh
 COPY docker/entrypoint.sh /app/gitlab/entrypoint.sh
