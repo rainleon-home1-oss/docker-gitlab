@@ -217,6 +217,8 @@ init_git() {
         echo "git_deploy_key_file not found."
         exit 1
     fi
+
+    echo "already inited!" > /app/gitlab/data/.lock_git_init
 }
 
 export_git_admin_key() {
