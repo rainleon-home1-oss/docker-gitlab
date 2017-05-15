@@ -2,10 +2,9 @@
 # sudo chmod a+rw /var/run/docker.sock
 # gitlab cant distribute settings and keys, need to setup manually:
 # mkdir -p ${HOME}/gitlab-runner/home/.ssh ${HOME}/gitlab-runner/home/.m2 ${HOME}/gitlab-runner/etc
-# chmod -R 777 gitlab-runner
-# /home/gitlab-runner/.m2/settings-security.xml
-# /home/gitlab-runner/.ssh/internal-mvnsite or local-mvnsite
-# /home/gitlab-runner/.ssh/internal-git or local-git
+# chmod -R 777 ${HOME}/gitlab-runner
+# add maven settings-security.xml as :
+# ${HOME}/gitlab-runner/home/.m2/settings-security.xml
 #
 # docker-compose build
 # docker-compose up -d

@@ -18,7 +18,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: ${DOCKER_REGISTRY:-registry.docker.local}/gitlab:8.16.4-ce.0
+    image: ${DOCKER_REGISTRY:-registry.docker.local}/gitlab:9.1.4-ce.0
     restart: always
     container_name: ${GIT_HOSTNAME:-local-git}
     hostname: ${GIT_HOSTNAME:-local-git}
@@ -28,16 +28,18 @@ services:
     volumes:
     - local-git-volume:/data
     - local-git-volume:${GIT_VOLUME:-/app/gitlab/data}
-    - ../../oss-configserver/src/main/resources/deploy_key.pub:${GIT_VOLUME:-/app/gitlab/data}/${GIT_HOSTNAME:-local-git}-deploy.pub
-    - ../../../:${GIT_VOLUME:-/app/gitlab/data}/workspace
+    - ../../:${GIT_VOLUME:-/app/gitlab/data}/workspace
     - ./docker/git_init.sh:/app/gitlab/git_init.sh
     - ./docker/entrypoint.sh:/app/gitlab/entrypoint.sh
     - ./docker/gitlab_utils.sh:/app/gitlab/gitlab_utils.sh
+    - local-git-volume:/etc/gitlab
+    - local-git-volume:/var/opt/gitlab
+    - local-git-volume:/var/log/gitlab
     environment:
     - GIT_VOLUME=${GIT_VOLUME:-/app/gitlab/data}
     - GIT_ADMIN_USERNAME=${GIT_ADMIN_USERNAME:-oss}
     - GITLAB_ROOT_PASSWORD=${GITLAB_ROOT_PASSWORD:-oss_pass}
-    - GIT_DEPLOY_KEY=${GIT_VOLUME:-/app/gitlab/data}/${GIT_HOSTNAME:-local-git}-deploy.pub
+    - GIT_DEPLOY_KEY=/app/gitlab/data/local-git-deploy.pub
     - GIT_HOSTNAME=${GIT_HOSTNAME:-local-git}
     - GIT_HTTP_PORT=80
     - GIT_SSH_PORT=22
