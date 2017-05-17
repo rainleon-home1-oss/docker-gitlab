@@ -3,18 +3,22 @@
 执行`docker exec -it oss-gitlab-runner gitlab-runner register`: 
 
 ```
-Please enter the gitlab-ci coordinator URL (e.g. https://gitlab.com )
-${INTERNAL_GIT_SERVICE}/ci
-
-Please enter the gitlab-ci token for this runner
+Please enter the gitlab-ci coordinator URL (e.g. https://gitlab.com/):
+${INTERNAL_GIT_SERVICE}/ci,Ex: http://local-git/ci
+Please enter the gitlab-ci token for this runner:
 xxx(从 gitlab runner 页面里找)
-
-Please enter the gitlab-ci description for this runner
-oss-gitlab-runner-${ip}
-
-INFO[0034] fcf5c619 Registering runner... succeeded
-Please enter the executor: shell, docker, docker-ssh, ssh?
+Please enter the gitlab-ci description for this runner:
+[oss-gitlab-runner]:oss-gitlab-runner-${ip}
+Please enter the gitlab-ci tags for this runner (comma separated):
+local-runner
+Whether to run untagged builds [true/false]:
+[false]: true
+Whether to lock Runner to current project [true/false]:
+[false]:
+Registering runner... succeeded                     runner=g7Q3K_A1
+Please enter the executor: parallels, virtualbox, shell, ssh, docker+machine, docker-ssh+machine, kubernetes, docker, docker-ssh:
 shell
+Runner registered successfully. Feel free to start it, but if it's running already the config should be automatically reloaded!
 
 ```
 
