@@ -17,10 +17,14 @@ Gitlab in docker
 
         export GIT_HOSTNAME=gitlab.XXXXXX
 
-        # mark this for skip init project to gitlab,default is false
+        # mark this for skip init project to gitlab,default is true,this will work only after init at least once
         export GIT_INIT_SKIP=true
         # mark this for internal gitlab, when local don't mark this will use 10080
         export GIT_EXTERNAL_PORT=80  default 10080
+        # modify this to refer another deploy_key file, make sure the file exists,ex:
+        # locate file at host path: ${HOME}/data/gitlab/config/deploy_key.pub
+        # as in container the location is /etc/gitlab/deploy_key.pub,so export GIT_DEPLOY_KEY:
+        export GIT_DEPLOY_KEY=/etc/gitlab/deploy_key.pub
 
 3. 启动
 
