@@ -21,7 +21,7 @@
 version: '2.1'
 services:
   gitlab-runner:
-    image: ${DOCKER_REGISTRY:-registry.docker.local}/gitlab-runner:1.0.1-xenial
+    image: home1oss/gitlab-runner:1.0.1-xenial
     build:
       context: .
       dockerfile: Dockerfile
