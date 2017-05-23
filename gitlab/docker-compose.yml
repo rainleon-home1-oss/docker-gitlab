@@ -22,7 +22,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: ${DOCKER_REGISTRY:-registry.docker.local}/gitlab:9.1.4-ce.0
+    image: home1oss/gitlab:9.1.4-ce.0
     restart: always
     container_name: ${GIT_HOSTNAME:-local-git}
     hostname: ${GIT_HOSTNAME:-local-git}
