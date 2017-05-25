@@ -13,8 +13,8 @@ spec:
         app: gitlab-runner
     spec:
       containers:
-      - image: registry.docker.yixinonline.org/oss-gitlab-runner:1.0.0-xenial
-        name: configserver
+      - image: home1oss/gitlab-runner:1.0.1-xenial
+        name: gitlab-runner
         resources:
           limits:
             cpu: "1"
