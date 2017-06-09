@@ -1,44 +1,66 @@
 
-## 注册
-执行`docker exec -it oss-gitlab-runner gitlab-runner register`: 
+# gitlab-runner
 
+## Start and register a runner
+
+1. GIT_SERVICE_TOKEN
+
+OSS's ci script need the GIT_SERVICE_TOKEN to access script or configuration in internal or private repository.
+
+- There are 2 ways to get GIT_SERVICE_TOKEN:
+
+  1. From git service page (e.g. gitlab: http(s)://gitlab.local/profile/personal_access_tokens page).
+  2. From cli (e.g. gitlab: `curl --request POST <host:port>/api/v3/session?login=<email>&password=<password>`).
+
+- GIT_SERVICE_TOKEN need to be set before container start by `export GIT_SERVICE_TOKEN=<your_git_service_token>`.
+
+2. Prepare directories and files
 ```
-Please enter the gitlab-ci coordinator URL (e.g. https://gitlab.com/):
-${INTERNAL_GIT_SERVICE}/ci,Ex: http://local-git/ci
+sudo chmod a+rw /var/run/docker.sock
+mkdir -p ${HOME}/gitlab-runner/home/.ssh ${HOME}/gitlab-runner/home/.m2 ${HOME}/gitlab-runner/home/.docker ${HOME}/gitlab-runner/etc
+chmod -R 777 ${HOME}/gitlab-runner
+```
+Gitlab cant distribute settings and keys, need to mount or download manually (e.g. maven's ~/.m2/settings-security.xml or git deploy key).
+
+3. Execute `docker-compose up -d`
+
+4. Find token for runner.
+Shared: Goto admin/runners page (e.g. http(s)://gitlab.local/admin/runners).
+Specific: Goto repo's settings/ci_cd page (e.g. http(s)://gitlab.local/<namespace>/<repo>/settings/ci_cd).
+
+5. Execute `docker exec -it oss-gitlab-runner gitlab-runner register` and input following info (in <>).
+```
 Please enter the gitlab-ci token for this runner:
-xxx(从 gitlab runner 页面里找)
+<Token found in step 1>
 Please enter the gitlab-ci description for this runner:
-[oss-gitlab-runner]:oss-gitlab-runner-${ip}
+<oss-gitlab-runner-<ip>>
 Please enter the gitlab-ci tags for this runner (comma separated):
-local-runner
+<oss-gitlab-runner>
 Whether to run untagged builds [true/false]:
-[false]: true
+<true>
 Whether to lock Runner to current project [true/false]:
-[false]:
-Registering runner... succeeded                     runner=g7Q3K_A1
+<false>
+Registering runner... succeeded runner=********
 Please enter the executor: parallels, virtualbox, shell, ssh, docker+machine, docker-ssh+machine, kubernetes, docker, docker-ssh:
-shell
+<shell>
 Runner registered successfully. Feel free to start it, but if it's running already the config should be automatically reloaded!
-
 ```
 
-## 自定义配置文件
-指定CONFIG_FILE环境变量
-配置项[参考官方](https://docs.gitlab.com/runner/configuration/advanced-configuration.html)
+## Advanced configuration (config.toml)
+Use `CONFIG_FILE` environment variable specify a configuration file.
+[Official doc for config.toml](https://docs.gitlab.com/runner/configuration/advanced-configuration.html)
 
-
-## 注意
-因为有从容器内部访问外部 ```docker service``` 的需求，需要修改宿主机的```/var/run/docker.sock```文件访问权限.
-
+## Note
+- Container instance needs to access docker (/var/run/docker.sock) on host.
 ```
 sudo chmod a+rw /var/run/docker.sock
 ```
 
-## 关于Environment
+- When register a runner "Whether to run untagged builds" should be true.
 
-- GIT_SERVICE_TOKEN：访问git服务上私有的项目需要用到用户的认证/授权token，需要在启动镜像的时候export指定，获取token方法：
-  
-  1. 方法1: 登录git服务, 例如gitlab: 进入 Profile Settings->Account->Private Token,获取token
-  2. 方法2: 命令行, 例如gitlab: `curl --request POST "${GIT_SERVICE}/api/v3/session?login={邮箱}&password={密码}"`
-
-- 获取token后，在启动镜像前执行`export GIT_SERVICE_TOKEN=<your_git_service_token>`
+- You can inspect container by:
+```
+docker exec -it oss-gitlab-runner cat /home/gitlab-runner/.ssh/config
+docker exec -it oss-gitlab-runner ls -la /home/gitlab-runner/.ssh
+docker exec -it oss-gitlab-runner ls -la /home/gitlab-runner/.docker
+```
