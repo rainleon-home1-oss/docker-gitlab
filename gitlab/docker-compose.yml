@@ -22,13 +22,13 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: ${DOCKER_REGISTRY:-registry.docker.local}/gitlab:9.1.4-ce.0
+    image: home1oss/gitlab:9.1.4-ce.0
     restart: always
     container_name: ${GIT_HOSTNAME:-local-git}
     hostname: ${GIT_HOSTNAME:-local-git}
     ports:
     - "20022:22"
-    - "${GIT_EXTERNAL_PORT:-10080}:${GITLAB_PORT:-80}"
+    - "${GIT_EXTERNAL_PORT:-10080}:${GIT_PORT:-80}"
     volumes:
     - local-git-volume:/data
     - local-git-volume:${GIT_VOLUME:-/app/gitlab/data}

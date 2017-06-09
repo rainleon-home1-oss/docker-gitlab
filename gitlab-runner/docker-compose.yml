@@ -1,7 +1,7 @@
 
 # sudo chmod a+rw /var/run/docker.sock
 # gitlab cant distribute settings and keys, need to setup manually:
-# mkdir -p ${HOME}/gitlab-runner/home/.ssh ${HOME}/gitlab-runner/home/.m2 ${HOME}/gitlab-runner/etc
+# mkdir -p ${HOME}/gitlab-runner/home/.ssh ${HOME}/gitlab-runner/home/.m2 ${HOME}/gitlab-runner/home/.docker ${HOME}/gitlab-runner/etc
 # chmod -R 777 ${HOME}/gitlab-runner
 # add maven settings-security.xml as :
 # ${HOME}/gitlab-runner/home/.m2/settings-security.xml
@@ -15,13 +15,14 @@
 # docker-compose restart
 # docker exec -it oss-gitlab-runner cat /home/gitlab-runner/.ssh/config
 # docker exec -it oss-gitlab-runner ls -la /home/gitlab-runner/.ssh
+# docker exec -it oss-gitlab-runner ls -la /home/gitlab-runner/.docker
 #
 # docker exec -it oss-gitlab-runner gitlab-runner register
 
 version: '2.1'
 services:
   gitlab-runner:
-    image: ${DOCKER_REGISTRY:-registry.docker.local}/gitlab-runner:1.0.1-xenial
+    image: home1oss/gitlab-runner:1.0.1-xenial
     build:
       context: .
       dockerfile: Dockerfile
@@ -38,7 +39,7 @@ services:
     environment:
     - GIT_SERVICE_TOKEN=${GIT_SERVICE_TOKEN:-your_git_service_token}
 
-#networks:
-#  default:
-#    external:
-#      name: oss-network
+networks:
+  default:
+    external:
+      name: oss-network
