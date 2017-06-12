@@ -17,7 +17,7 @@ ADD docker/entrypoint /
 RUN chmod +x /entrypoint
 
 COPY docker/set_env.sh /root/
-# 设置环境变量, 将gitlab-runner 用户添加的 docker 组, 修正目录权限
+# Set environment variables, add user gitlab-runner into docker group, fix Directory permissions.
 RUN chmod +x /root/set_env.sh && \
     /root/set_env.sh && \
     gpasswd -a gitlab-runner docker && \

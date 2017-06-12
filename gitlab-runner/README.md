@@ -3,16 +3,16 @@
 
 ## Start and register a runner
 
-1. GIT_SERVICE_TOKEN
+1. INFRASTRUCTURE_CONF_GIT_TOKEN
 
-OSS's ci script need the GIT_SERVICE_TOKEN to access script or configuration in internal or private repository.
+OSS's ci script need the INFRASTRUCTURE_CONF_GIT_TOKEN to access script or configuration in internal or private repository.
 
-- There are 2 ways to get GIT_SERVICE_TOKEN:
+- There are 2 ways to get INFRASTRUCTURE_CONF_GIT_TOKEN from gitlab:
 
   1. From git service page (e.g. gitlab: http(s)://gitlab.local/profile/personal_access_tokens page).
   2. From cli (e.g. gitlab: `curl --request POST <host:port>/api/v3/session?login=<email>&password=<password>`).
 
-- GIT_SERVICE_TOKEN need to be set before container start by `export GIT_SERVICE_TOKEN=<your_git_service_token>`.
+- INFRASTRUCTURE_CONF_GIT_TOKEN need to be set before container start by `export INFRASTRUCTURE_CONF_GIT_TOKEN=<your_INFRASTRUCTURE_CONF_GIT_TOKEN>`.
 
 2. Prepare directories and files on host
 ```

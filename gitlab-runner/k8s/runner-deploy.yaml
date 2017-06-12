@@ -23,11 +23,11 @@ spec:
             cpu: "1"
             memory: 1024Mi
         env:
-          - name: GIT_SERVICE_TOKEN
+          - name: INFRASTRUCTURE_CONF_GIT_TOKEN
             valueFrom:
               secretKeyRef:
                 name: runner-secret
-                key: GIT_SERVICE_TOKEN
+                key: INFRASTRUCTURE_CONF_GIT_TOKEN
         volumeMounts:
           - name: home
             mountPath: /home/gitlab-runner
