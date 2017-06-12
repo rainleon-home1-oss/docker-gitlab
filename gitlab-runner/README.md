@@ -14,7 +14,7 @@ OSS's ci script need the GIT_SERVICE_TOKEN to access script or configuration in 
 
 - GIT_SERVICE_TOKEN need to be set before container start by `export GIT_SERVICE_TOKEN=<your_git_service_token>`.
 
-2. Prepare directories and files
+2. Prepare directories and files on host
 ```
 sudo chmod a+rw /var/run/docker.sock
 mkdir -p ${HOME}/gitlab-runner/home/.ssh ${HOME}/gitlab-runner/home/.m2 ${HOME}/gitlab-runner/home/.docker ${HOME}/gitlab-runner/etc

@@ -27,7 +27,7 @@ ENV LC_ALL en_US.UTF-8
 
 ENV JAVA_OPTS -Duser.language=zh -Duser.region=CN -Dfile.encoding='UTF-8' -Duser.timezone='Asia/Shanghai'
 
-COPY docker/deploy_key.pub /app/gitlab/data/local-git-deploy.pub
+COPY docker/default_deploy_key.pub /app/gitlab/data/default_deploy_key.pub
 COPY docker/gitlab_utils.sh /app/gitlab/gitlab_utils.sh
 COPY docker/git_init.sh /app/gitlab/git_init.sh
 COPY docker/entrypoint.sh /app/gitlab/entrypoint.sh

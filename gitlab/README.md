@@ -1,26 +1,32 @@
 
-1. 宿主机目录
+# gitlab
 
-    mkdir -p ${HOME}/data/gitlab/config && mkdir -p ${HOME}/data/gitlab/data && mkdir -p ${HOME}/data/gitlab/logs
+  see: https://hub.docker.com/r/gitlab/gitlab-ce/
 
-    # 注意，gitlab/docker/deploy_key.pub 用来向gitlab添加configserver应用的ssh key，这里默认会添加一组公私钥:
-    # 如果有新的需求需要添加新的可以通过web界面：http://gitlab.XXXXX/group_name/repo_name/settings/repository: Deploy Keys 添加，当然也可以将这里的deploy_key.pub内容修改，
-    # 然后重新build，但不建议这么做。
+1. Prepare directories and files on host
 
-2. 环境变量
+  `mkdir -p ${HOME}/.oss/gitlab.local/etc/gitlab ${HOME}/.oss/gitlab.local/var/opt/gitlab ${HOME}/.oss/gitlab.local/var/log/gitlab`
 
-    export GIT_HOSTNAME=gitlab.XXXXXX
+2. Environment variables
 
-    # mark this for skip init project to gitlab,default is true,this will work only after init at least once
-    export GIT_INIT_SKIP=true
-    # mark this for internal gitlab, when local don't mark this will use 10080
-    export GIT_EXTERNAL_PORT=80  default 10080
-    # modify this to refer another deploy_key file, make sure the file exists,ex:
-    # locate file at host path: ${HOME}/data/gitlab/config/deploy_key.pub
-    # as in container the location is /etc/gitlab/deploy_key.pub,so export GIT_DEPLOY_KEY:
-    export GIT_DEPLOY_KEY=/etc/gitlab/deploy_key.pub
+  `export GIT_HOSTNAME=gitlab.local`
 
-3. 启动
+  Skip auto repo init, this works only after initialized at least once
+  `export SKIP_AUTO_REPO_INIT=true`
+    
+  Set http prot (default 10080)
+  `export GIT_EXTERNAL_PORT=80`
+    
+  Default deploy key is same as configserver's deploy key (/app/gitlab/data/default_deploy_key.pub).
+  You can change it by mount a new key and set a new value for GIT_DEPLOY_KEY.
+  Access gitlab's group_name/repo_name/settings/repository page to manage Deploy Keys.
+  `export GIT_DEPLOY_KEY=/etc/gitlab/default_deploy_key.pub`
 
-    docker-compose build
+3. Boot
+
     docker-compose up -d
+
+4. Entry point methods
+
+  Export private key
+  `docker exec gitlab.local /app/gitlab/entrypoint.sh export_git_admin_key > ~/.ssh/gitlab.local`

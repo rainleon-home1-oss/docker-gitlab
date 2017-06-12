@@ -17,7 +17,7 @@ services:
     # gitlab-runner's config directory
     - ${HOME}/gitlab-runner/etc:/etc/gitlab-runner
     environment:
-    - GIT_SERVICE_TOKEN=${GIT_SERVICE_TOKEN:-your_git_service_token}
+    - GIT_SERVICE_TOKEN=${GIT_SERVICE_TOKEN:-your_GIT_SERVICE_TOKEN}
 
 networks:
   default:
