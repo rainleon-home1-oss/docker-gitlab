@@ -2,22 +2,22 @@
 version: '2.1'
 services:
   gitlab-runner:
-    image: home1oss/gitlab-runner:9.1.1-xenial
     build:
       context: .
       dockerfile: Dockerfile
-    restart: always
-    container_name: oss-gitlab-runner
-    hostname: oss-gitlab-runner
+    container_name: ${GITLAT_RUNNER_HOSTNAME:-gitlab-runner.local}
+    environment:
+    - INFRASTRUCTURE_CONF_GIT_TOKEN=${INFRASTRUCTURE_CONF_GIT_TOKEN:-your_INFRASTRUCTURE_CONF_GIT_TOKEN}
+    hostname: ${GITLAT_RUNNER_HOSTNAME:-gitlab-runner.local}
+    image: home1oss/gitlab-runner:9.1.1-xenial
     network_mode: host
+    restart: always
     volumes:
     - /var/run/docker.sock:/var/run/docker.sock
     # gitlab-runner user's home directory
-    - ${HOME}/gitlab-runner/home:/home/gitlab-runner
+    - ${HOME}/.oss/${GITLAT_RUNNER_HOSTNAME:-gitlab-runner.local}/home:/home/gitlab-runner
     # gitlab-runner's config directory
-    - ${HOME}/gitlab-runner/etc:/etc/gitlab-runner
-    environment:
-    - INFRASTRUCTURE_CONF_GIT_TOKEN=${INFRASTRUCTURE_CONF_GIT_TOKEN:-your_INFRASTRUCTURE_CONF_GIT_TOKEN}
+    - ${HOME}/.oss/${GITLAT_RUNNER_HOSTNAME:-gitlab-runner.local}/etc:/etc/gitlab-runner
 
 networks:
   default:

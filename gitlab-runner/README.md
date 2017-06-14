@@ -9,33 +9,36 @@ OSS's ci script need the INFRASTRUCTURE_CONF_GIT_TOKEN to access script or confi
 
 - There are 2 ways to get INFRASTRUCTURE_CONF_GIT_TOKEN from gitlab:
 
-  1. From git service page (e.g. gitlab: http(s)://gitlab.local/profile/personal_access_tokens page).
-  2. From cli (e.g. gitlab: `curl --request POST <host:port>/api/v3/session?login=<email>&password=<password>`).
+  1. From git service page (e.g. gitlab: http(s)://gitlab.local:10080/profile/personal_access_tokens page).
+  2. From cli (e.g. gitlab: `curl --request POST http://gitlab.local:10080/api/v3/session?login=user&password=user_pass`).
 
 - INFRASTRUCTURE_CONF_GIT_TOKEN need to be set before container start by `export INFRASTRUCTURE_CONF_GIT_TOKEN=<your_INFRASTRUCTURE_CONF_GIT_TOKEN>`.
 
 2. Prepare directories and files on host
 ```
-sudo chmod a+rw /var/run/docker.sock
-mkdir -p ${HOME}/gitlab-runner/home/.ssh ${HOME}/gitlab-runner/home/.m2 ${HOME}/gitlab-runner/home/.docker ${HOME}/gitlab-runner/etc
-chmod -R 777 ${HOME}/gitlab-runner
+docker run --privileged=true --rm -v /var/run/docker.sock:/var/run/docker.sock busybox chmod a+rw /var/run/docker.sock
+docker run --privileged=true --rm -v /var/run/docker.sock:/var/run/docker.sock busybox ls -l /var/run/docker.sock
+mkdir -p ${HOME}/.oss/gitlab-runner.local/home/.ssh ${HOME}/.oss/gitlab-runner.local/home/.m2 ${HOME}/.oss/gitlab-runner.local/home/.docker ${HOME}/.oss/gitlab-runner.local/etc
+chmod -R 777 ${HOME}/.oss/gitlab-runner.local
 ```
-Gitlab cant distribute settings and keys, need to mount or download manually (e.g. maven's ~/.m2/settings-security.xml or git deploy key).
+Gitlab can not distribute settings and keys like jenkins, need to mount or download manually (e.g. maven's ~/.m2/settings-security.xml or git deploy key).
 
 3. Execute `docker-compose up -d`
 
 4. Find token for runner.
-Shared: Goto admin/runners page (e.g. http(s)://gitlab.local/admin/runners).
-Specific: Goto repo's settings/ci_cd page (e.g. http(s)://gitlab.local/<namespace>/<repo>/settings/ci_cd).
+Shared: Goto admin/runners page (e.g. http(s)://gitlab.local:10080/admin/runners).
+Specific: Goto repo's settings/ci_cd page (e.g. http(s)://gitlab.local:10080/<namespace>/<repo>/settings/ci_cd).
 
-5. Execute `docker exec -it oss-gitlab-runner gitlab-runner register` and input following info (in <>).
+5. Execute `docker exec -it gitlab-runner.local gitlab-runner register` and input following info (in <>).
 ```
+Please enter the gitlab-ci coordinator URL (e.g. https://gitlab.com/):
+<e.g. http://gitlab.local:10080/>
 Please enter the gitlab-ci token for this runner:
 <Token found in step 1>
 Please enter the gitlab-ci description for this runner:
-<oss-gitlab-runner-<ip>>
+<gitlab-runner-<ip>>
 Please enter the gitlab-ci tags for this runner (comma separated):
-<oss-gitlab-runner>
+<gitlab-runner>
 Whether to run untagged builds [true/false]:
 <true>
 Whether to lock Runner to current project [true/false]:
