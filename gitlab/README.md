@@ -29,4 +29,4 @@
 4. Entry point methods
 
   Export private key
-  `docker exec gitlab.local /app/gitlab/entrypoint.sh export_git_admin_key > ~/.ssh/gitlab.local`
+  `docker exec gitlab.local /app/gitlab/entrypoint.sh export_git_admin_key > ~/.ssh/gitlab.local && chmod 600 ~/.ssh/gitlab.local`
