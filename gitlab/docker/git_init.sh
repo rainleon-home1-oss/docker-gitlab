@@ -3,7 +3,7 @@
 # arguments:
 # returns: git_hostname
 git_hostname() {
-    if [ -z "${GIT_HOSTNAME}" ]; then echo "local-git"; else echo "${GIT_HOSTNAME}"; fi
+    if [ -z "${GIT_HOSTNAME}" ]; then echo "gitlab.local"; else echo "${GIT_HOSTNAME}"; fi
 }
 
 # arguments:
@@ -228,50 +228,3 @@ export_git_admin_key() {
 export_git_deploy_key() {
     cat $(git_deploy_key)
 }
-
-## arguments: jar/zip archive, file, target
-## returns:
-#extract_file_from_archive() {
-#    local archive="$1"
-#    local file="$2"
-#    local target="$3"
-#    if [[ ${file:0:1} == / ]]; then file=${file:1}; fi
-#    echo "EXTRACT unzip -p ${archive} ${file} > ${target}" 1>&2
-#    unzip -p ${archive} ${file} > ${target}
-#    local result=$?
-#    cat ${target} 1>&2
-#    echo "EXTRACT return code ${result}" 1>&2
-#}
-#
-## arguments: target
-## returns: git_deploy_key_file
-#git_deploy_key_file() {
-#    local archive=$(ls | grep .jar | grep -v sources.jar | grep -v jar.original)
-#    local target=$1
-#    local result=""
-#    if [ -z "${SPRING_CLOUD_CONFIG_SERVER_DEPLOYKEY}" ]; then
-#        extract_file_from_archive ${archive} BOOT-INF/classes/deploy_key.pub ${target}
-#        if [ -f ${target} ]; then
-#            result=${target}
-#        else
-#            result=""
-#        fi
-#    elif [ ${SPRING_CLOUD_CONFIG_SERVER_DEPLOYKEY:0:10} == classpath: ]; then
-#        extract_file_from_archive ${archive} BOOT-INF/classes/${SPRING_CLOUD_CONFIG_SERVER_DEPLOYKEY:10}.pub ${target}
-#        if [ -f ${target} ]; then
-#            result=${target}
-#        else
-#            result=""
-#        fi
-#    elif [ ${SPRING_CLOUD_CONFIG_SERVER_DEPLOYKEY:0:5} == file: ] && [ -f ${SPRING_CLOUD_CONFIG_SERVER_DEPLOYKEY:0:5} ]; then
-#        result=${SPRING_CLOUD_CONFIG_SERVER_DEPLOYKEY:5}
-#    elif [ -f ${SPRING_CLOUD_CONFIG_SERVER_DEPLOYKEY} ]; then
-#        result=${SPRING_CLOUD_CONFIG_SERVER_DEPLOYKEY}
-#    else
-#        result="";
-#    fi
-#    if [ -f ${result} ]; then
-#        chmod 600 ${result}
-#    fi
-#    echo ${result}
-#}

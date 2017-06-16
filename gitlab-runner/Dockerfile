@@ -1,7 +1,7 @@
 
 FROM home1oss/ci-ubuntu:16.04
 
-ADD https://github.com/Yelp/dumb-init/releases/download/v1.0.2/dumb-init_1.0.2_amd64 /usr/bin/dumb-init
+ADD https://github.com/Yelp/dumb-init/releases/download/v1.2.0/dumb-init_1.2.0_amd64 /usr/bin/dumb-init
 RUN chmod +x /usr/bin/dumb-init
 
 RUN echo "deb https://packages.gitlab.com/runner/gitlab-ci-multi-runner/ubuntu/ xenial main" > /etc/apt/sources.list.d/runner_gitlab-ci-multi-runner.list && \
@@ -17,7 +17,7 @@ ADD docker/entrypoint /
 RUN chmod +x /entrypoint
 
 COPY docker/set_env.sh /root/
-# 设置环境变量, 将gitlab-runner 用户添加的 docker 组, 修正目录权限
+# Set environment variables, add user gitlab-runner into docker group, fix Directory permissions.
 RUN chmod +x /root/set_env.sh && \
     /root/set_env.sh && \
     gpasswd -a gitlab-runner docker && \
@@ -27,4 +27,3 @@ RUN chmod +x /root/set_env.sh && \
 VOLUME ["/etc/gitlab-runner", "/home/gitlab-runner"]
 ENTRYPOINT ["/usr/bin/dumb-init", "/entrypoint"]
 CMD ["run", "--user=gitlab-runner", "--working-directory=/home/gitlab-runner"]
-
