@@ -1,6 +1,4 @@
 
-# see: https://github.com/gogits/gogs/blob/v0.9.97/Dockerfile
-
 FROM gitlab/gitlab-ce:9.1.4-ce.0
 
 VOLUME ["/app/gitlab/data"]
@@ -18,7 +16,7 @@ RUN sed -i 's/http:\/\/archive.ubuntu.com\/ubuntu\//http:\/\/mirrors.163.com\/ub
     echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && \
     dpkg-reconfigure -f noninteractive locales && \
 #    apt-get upgrade -y && \
-    apt-get install -y ca-certificates apt-transport-https vim curl nano wget build-essential python python-pip unzip jq && \
+    apt-get install -y ca-certificates apt-transport-https vim curl nano wget build-essential net-tools python python-pip unzip jq && \
     apt-get -q autoremove && \
     apt-get -q clean -y && rm -rf /var/lib/apt/lists/* && rm -f /var/cache/apt/*.bin
 

@@ -10,8 +10,8 @@ services:
     container_name: ${GIT_HOSTNAME:-gitlab.local}
     hostname: ${GIT_HOSTNAME:-gitlab.local}
     ports:
-    - "20022:22"
-    - "${GIT_EXTERNAL_PORT:-10080}:${GIT_PORT:-80}"
+    - "${GITLAB_SHELL_SSH_PORT:-20022}:22"
+    - "${GIT_HTTP_PORT:-10080}:${GIT_HTTP_PORT:-10080}"
     volumes:
     # for script develop & debug
     #- ./docker/git_init.sh:/app/gitlab/git_init.sh
@@ -32,8 +32,8 @@ services:
     - GIT_ADMIN_USERNAME=${GIT_ADMIN_USERNAME:-user}
     - GIT_DEPLOY_KEY=${GIT_DEPLOY_KEY:-/app/gitlab/data/default_deploy_key.pub}
     - GIT_HOSTNAME=${GIT_HOSTNAME:-gitlab.local}
-    - GIT_HTTP_PORT=80
-    - GIT_SSH_PORT=22
+    - GIT_HTTP_PORT=${GIT_HTTP_PORT:-10080}
+    - GITLAB_SHELL_SSH_PORT=${GITLAB_SHELL_SSH_PORT:-20022}
     - GIT_VOLUME=${GIT_VOLUME:-/app/gitlab/data}
     - GIT_WORKSPACE=${GIT_VOLUME:-/app/gitlab/data}/workspace
     - SKIP_AUTO_REPO_INIT=${SKIP_AUTO_REPO_INIT:-true}

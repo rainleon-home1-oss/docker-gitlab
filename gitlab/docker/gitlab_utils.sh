@@ -32,9 +32,9 @@ git_service_install() {
     local var_git_app_url="http://${2}:${3}"
 
     local body='{
-      "username": "'${2}'",
       "email": "'${2}'@xxx.com",
       "name": "'${2}'",
+      "username": "'${2}'",
       "password":"'${3}'",
       "admin": true,
       "confirm": false

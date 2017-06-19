@@ -15,7 +15,7 @@
   `export SKIP_AUTO_REPO_INIT=true`
     
   Set http prot (default 10080)
-  `export GIT_EXTERNAL_PORT=80`
+  `export GIT_HTTP_PORT=10080`
     
   Default deploy key is same as configserver's deploy key (/app/gitlab/data/default_deploy_key.pub).
   You can change it by mount a new key and set a new value for GIT_DEPLOY_KEY.

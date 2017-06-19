@@ -19,7 +19,15 @@ case $1 in
         export_git_deploy_key
         ;;
 
+    "/assets/wrapper")
+        echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> init_git in background, see /var/log/gitlab/init_git.log >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+        init_git &>/var/log/gitlab/init_git.log &
+        echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> exec $@ >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+        exec "$@"
+        ;;
+
     *)
+        echo "command: $@"
         echo -e "Usage: $0 param
     param are follows:
         init_git
@@ -28,12 +36,6 @@ case $1 in
         args                   pass to service entry point.
                                gitlab's default is: /bin/s6-svscan /app/gitlab/docker/s6/
         "
-        if [ -f "/app/gitlab/data/.lock_git_init" ] && [ "true" == "${SKIP_AUTO_REPO_INIT}" ] ; then
-            echo "skip git init step as SKIP_AUTO_REPO_INIT=${SKIP_AUTO_REPO_INIT} and already init at least once"
-        else
-            init_git & echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>";
-        fi
-        echo "start git service"
         exec "$@"
         ;;
 esac

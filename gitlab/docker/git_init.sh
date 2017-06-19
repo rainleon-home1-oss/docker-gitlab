@@ -15,7 +15,7 @@ git_http_port() {
 # arguments:
 # returns: git_ssh_port
 git_ssh_port() {
-    if [ -z "${GIT_SSH_PORT}" ]; then echo "no GIT_SSH_PORT specified"; exit 1; else echo "${GIT_SSH_PORT}"; fi
+    if [ -z "${GITLAB_SHELL_SSH_PORT}" ]; then echo "no GITLAB_SHELL_SSH_PORT specified"; exit 1; else echo "${GITLAB_SHELL_SSH_PORT}"; fi
 }
 
 # arguments:
@@ -92,6 +92,7 @@ print_info() {
     echo "--------------------------------------------------------------------------------"
 }
 
+# arguments: hostname, http_port, ssh_port
 wait_git_service_up() {
     if [ ! -f /app/gitlab/wait-for-it.sh ]; then
         echo "init_git_async /app/gitlab/wait-for-it.sh not found, exit."
@@ -100,9 +101,9 @@ wait_git_service_up() {
         echo "init_git_async /app/gitlab/wait-for-it.sh found."
     fi
 
-    local var_git_hostname="$(git_hostname)"
-    local var_git_http_port="$(git_http_port)"
-    local var_git_ssh_port="$(git_ssh_port)"
+    local var_git_hostname="${1}"
+    local var_git_http_port="${2}"
+    local var_git_ssh_port="${3}"
 
     echo "wait_git_service_up."
 #    waitforit -full-connection=tcp://${var_git_hostname}:${var_git_http_port} -timeout=600
@@ -113,10 +114,11 @@ wait_git_service_up() {
     echo "wait_git_service_up end."
 }
 
+# arguments: hostname, http_port
 wait_http_ok(){
     echo "wait http response Ok(200)"
-    local var_git_hostname="$(git_hostname)"
-    local var_git_http_port="$(git_http_port)"
+    local var_git_hostname="${1}"
+    local var_git_http_port="${2}"
     local var_git_http_prefix="http://${var_git_hostname}:${var_git_http_port}"
     # 重试时间间隔
     local retry_interval=5
@@ -150,10 +152,11 @@ init_git() {
     echo "init_git $@"
     . /app/gitlab/gitlab_utils.sh
 
+    local var_git_admin_key="$(git_admin_key)"
     local var_git_hostname="$(git_hostname)"
     local var_git_http_port="$(git_http_port)"
     local var_git_http_prefix="http://${var_git_hostname}:${var_git_http_port}"
-    local var_git_admin_key="$(git_admin_key)"
+    local var_git_ssh_port="$(git_ssh_port)"
     local var_git_work_space="$(git_workspace)"
 
     local var_git_admin_user="$(git_admin_user)"
@@ -162,8 +165,46 @@ init_git() {
 
     init_git_admin_key
     print_info
-    wait_git_service_up
-    wait_http_ok
+
+    echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> waiting default ports >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+    wait_git_service_up "localhost" "80" "22"
+    wait_http_ok "localhost" "80"
+    if [ -n "${GITLAB_SHELL_SSH_PORT}" ]; then
+        echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> set ssh port >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+        sed -i -r "s|(^Port\s)(.*?)|\1${var_git_ssh_port}|g" /etc/ssh/sshd_config
+        sed -i -r "s|(^Port\s)(.*?)|\1${var_git_ssh_port}|g" /assets/sshd_config
+        sed -i "s|^# gitlab_rails\['gitlab_shell_ssh_port'\]|gitlab_rails['gitlab_shell_ssh_port']|g" /etc/gitlab/gitlab.rb
+        sed -i -r "s|(^gitlab_rails\['gitlab_shell_ssh_port'\] = )(.*?)|\1${var_git_ssh_port}|g" /etc/gitlab/gitlab.rb
+        service ssh restart
+    fi
+    if [ -n "${GIT_HTTP_PORT}" ]; then
+        echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> set http port >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+        sed -i "s|^# external_url|external_url|g" /etc/gitlab/gitlab.rb
+        sed -i -r "s|(^external_url ')(.*?)(')|\1http://${var_git_hostname}:${var_git_http_port}\3|g" /etc/gitlab/gitlab.rb
+    fi
+    echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> reconfigure >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+    gitlab-ctl reconfigure
+    if [ -n "${GITLAB_SHELL_SSH_PORT}" ]; then
+        sed -i -r "s|^(\s+ssh_port:\s+)(.*?)|\1${var_git_ssh_port}|g" /opt/gitlab/embedded/service/gitlab-rails/config/gitlab.yml
+    fi
+    echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> restart >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+    gitlab-ctl restart
+    #gitlab-rake gitlab:check
+    #
+    # incorrect
+    # edit /opt/gitlab/embedded/service/gitlab-rails/config/gitlab.yml
+    # gitlab.host: ${var_git_hostname}
+    # gitlab.port: ${var_git_http_port}
+    # gitlab.ssh_port: ${var_git_ssh_port}
+    # edit /opt/gitlab/embedded/conf/nginx.conf server.listen server_name.name
+    #gitlab-ctl restart
+    #
+    #/opt/gitlab/embedded/service/gitlab-shell/config.yml
+    #/var/opt/gitlab/gitlab-shell/config.yml
+
+    echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> waiting new ports >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+    wait_git_service_up "${var_git_hostname}" "${var_git_http_port}" "${var_git_ssh_port}"
+    wait_http_ok "${var_git_hostname}" "${var_git_http_port}"
 
     git_service_install ${var_git_http_prefix} ${var_git_admin_user} ${var_git_admin_passwd}
 
@@ -173,52 +214,57 @@ init_git() {
     local var_git_ssh_port="$(git_ssh_port)"
     git_service_ssh_config ${var_git_hostname} ${var_git_ssh_port} ${var_git_admin_key}
 
-    # find all repositories that has a '-config' suffix
-    local git_repos=($(find ${var_git_work_space} -mindepth 1 -maxdepth 1 -type d | awk -F "${var_git_work_space}/" '{print $2}'))
-    #  | grep -E '.+-config.{0}'
-    for git_repo in "${git_repos[@]}"; do
-        local repo_dir="${var_git_work_space}/${git_repo}"
-        if [ -d ${repo_dir}/.git ]; then
-            # find remote git group
-            local var_git_group_name=$(get_git_group_name ${repo_dir})
-            echo "creating git_repo: ${var_git_group_name}/${git_repo}"
-            git_service_create_repo ${var_git_http_prefix} ${var_git_admin_user} ${var_git_admin_passwd} ${var_git_group_name} ${git_repo}
+    if [ ! -f "/app/gitlab/data/.lock_git_init" ] || [ "false" == "${SKIP_AUTO_REPO_INIT}" ]; then
+        # find all repositories that has a '-config' suffix
+        local git_repos=($(find ${var_git_work_space} -mindepth 1 -maxdepth 1 -type d | awk -F "${var_git_work_space}/" '{print $2}'))
+        #  | grep -E '.+-config.{0}'
 
-            # git branches have been checkout
-            #git_branches=($(cd ${repo_dir}; git for-each-ref --sort=-committerdate refs/heads/ --format='%(refname:short)'))
-            # git branches of refs/remotes/origin/* except HEAD
-            git_branches=($(cd ${repo_dir}; git for-each-ref --sort=-committerdate refs/remotes/origin/ --format='%(refname:short)' | sed 's#^origin/##' | grep -v HEAD))
-            echo "git_branches: ${git_branches[@]}"
-            for git_branch in "${git_branches[@]}"; do
-                git_service_push_repo ${var_git_work_space} ${var_git_hostname} ${var_git_hostname} ${var_git_group_name} ${git_repo} refs/remotes/origin/${git_branch} refs/heads/${git_branch}
-            done
-
-            # configserver gourp need webhook
-            if [ ${var_git_group_name} == "configserver" ] && [ ${var_configserver_webhook_endpoint} ];then
-                git_web_hook ${var_git_http_prefix} ${var_git_admin_user} ${var_git_admin_passwd} ${var_git_group_name} ${git_repo} ${var_configserver_webhook_endpoint}
-            fi
-
-        fi
-    done
-
-    # setup deploy key for client read-only access
-    #local var_deploy_key=$(git_deploy_key_file "$(git_deploy_key)")
-    local var_deploy_key="$(git_deploy_key)"
-    if [ ! -z ${var_deploy_key} ]; then
         for git_repo in "${git_repos[@]}"; do
             local repo_dir="${var_git_work_space}/${git_repo}"
             if [ -d ${repo_dir}/.git ]; then
-                echo "set deploy key for git_repo: ${git_repo}"
+                # find remote git group
                 local var_git_group_name=$(get_git_group_name ${repo_dir})
-                git_service_deploy_key ${var_git_http_prefix} ${var_git_admin_user} ${var_git_admin_passwd} ${var_git_group_name} ${git_repo} ${var_deploy_key}
+                echo "creating git_repo: ${var_git_group_name}/${git_repo}"
+                git_service_create_repo ${var_git_http_prefix} ${var_git_admin_user} ${var_git_admin_passwd} ${var_git_group_name} ${git_repo}
+
+                # git branches have been checkout
+                #git_branches=($(cd ${repo_dir}; git for-each-ref --sort=-committerdate refs/heads/ --format='%(refname:short)'))
+                # git branches of refs/remotes/origin/* except HEAD
+                git_branches=($(cd ${repo_dir}; git for-each-ref --sort=-committerdate refs/remotes/origin/ --format='%(refname:short)' | sed 's#^origin/##' | grep -v HEAD))
+                echo "git_branches: ${git_branches[@]}"
+                for git_branch in "${git_branches[@]}"; do
+                    git_service_push_repo ${var_git_work_space} ${var_git_hostname} ${var_git_hostname} ${var_git_group_name} ${git_repo} refs/remotes/origin/${git_branch} refs/heads/${git_branch}
+                done
+
+                # configserver gourp need webhook
+                if [ ${var_git_group_name} == "configserver" ] && [ ${var_configserver_webhook_endpoint} ];then
+                    git_web_hook ${var_git_http_prefix} ${var_git_admin_user} ${var_git_admin_passwd} ${var_git_group_name} ${git_repo} ${var_configserver_webhook_endpoint}
+                fi
+
             fi
         done
+
+        # setup deploy key for client read-only access
+        #local var_deploy_key=$(git_deploy_key_file "$(git_deploy_key)")
+        local var_deploy_key="$(git_deploy_key)"
+        if [ ! -z ${var_deploy_key} ]; then
+            for git_repo in "${git_repos[@]}"; do
+                local repo_dir="${var_git_work_space}/${git_repo}"
+                if [ -d ${repo_dir}/.git ]; then
+                    echo "set deploy key for git_repo: ${git_repo}"
+                    local var_git_group_name=$(get_git_group_name ${repo_dir})
+                    git_service_deploy_key ${var_git_http_prefix} ${var_git_admin_user} ${var_git_admin_passwd} ${var_git_group_name} ${git_repo} ${var_deploy_key}
+                fi
+            done
+        else
+            echo "git_deploy_key_file not found."
+            exit 1
+        fi
     else
-        echo "git_deploy_key_file not found."
-        exit 1
+        echo "Skip auto repo init"
     fi
 
-    echo "already inited!" > /app/gitlab/data/.lock_git_init
+    echo "already initialized!" > /app/gitlab/data/.lock_git_init
 }
 
 export_git_admin_key() {
