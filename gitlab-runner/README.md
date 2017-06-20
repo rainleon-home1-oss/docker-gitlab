@@ -10,7 +10,7 @@ OSS's ci script need the INFRASTRUCTURE_CONF_GIT_TOKEN to access script or confi
 - There are 2 ways to get INFRASTRUCTURE_CONF_GIT_TOKEN from gitlab:
 
   1. From git service page (e.g. gitlab: http(s)://gitlab.local:10080/profile/personal_access_tokens page).
-  2. From cli (e.g. gitlab: `curl --request POST http://gitlab.local:10080/api/v3/session?login=user&password=user_pass`).
+  2. From cli (e.g. gitlab: `curl --request POST "http://gitlab.local:10080/api/v3/session?login=user&password=user_pass"`).
 
 - INFRASTRUCTURE_CONF_GIT_TOKEN need to be set before container start by `export INFRASTRUCTURE_CONF_GIT_TOKEN=<your_INFRASTRUCTURE_CONF_GIT_TOKEN>`.
 
@@ -34,7 +34,7 @@ Specific: Goto repo's settings/ci_cd page (e.g. http(s)://gitlab.local:10080/<na
 Please enter the gitlab-ci coordinator URL (e.g. https://gitlab.com/):
 <e.g. http://gitlab.local:10080/>
 Please enter the gitlab-ci token for this runner:
-<Token found in step 1>
+<Token found in step 4>
 Please enter the gitlab-ci description for this runner:
 <gitlab-runner-<ip>>
 Please enter the gitlab-ci tags for this runner (comma separated):
