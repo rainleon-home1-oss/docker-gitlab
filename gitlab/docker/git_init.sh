@@ -166,43 +166,51 @@ init_git() {
     init_git_admin_key
     print_info
 
-    echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> waiting default ports >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
-    wait_git_service_up "localhost" "80" "22"
-    wait_http_ok "localhost" "80"
-    if [ -n "${GITLAB_SHELL_SSH_PORT}" ]; then
-        echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> set ssh port >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
-        sed -i -r "s|(^Port\s)(.*?)|\1${var_git_ssh_port}|g" /etc/ssh/sshd_config
-        sed -i -r "s|(^Port\s)(.*?)|\1${var_git_ssh_port}|g" /assets/sshd_config
-        sed -i "s|^# gitlab_rails\['gitlab_shell_ssh_port'\]|gitlab_rails['gitlab_shell_ssh_port']|g" /etc/gitlab/gitlab.rb
-        sed -i -r "s|(^gitlab_rails\['gitlab_shell_ssh_port'\] = )(.*?)|\1${var_git_ssh_port}|g" /etc/gitlab/gitlab.rb
-        service ssh restart
-    fi
-    if [ -n "${GIT_HTTP_PORT}" ]; then
-        echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> set http port >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
-        sed -i "s|^# external_url|external_url|g" /etc/gitlab/gitlab.rb
-        sed -i -r "s|(^external_url ')(.*?)(')|\1http://${var_git_hostname}:${var_git_http_port}\3|g" /etc/gitlab/gitlab.rb
-    fi
-    echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> reconfigure >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
-    gitlab-ctl reconfigure
-    if [ -n "${GITLAB_SHELL_SSH_PORT}" ]; then
-        sed -i -r "s|^(\s+ssh_port:\s+)(.*?)|\1${var_git_ssh_port}|g" /opt/gitlab/embedded/service/gitlab-rails/config/gitlab.yml
-    fi
-    echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> restart >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
-    gitlab-ctl restart
-    #gitlab-rake gitlab:check
-    #
-    # incorrect
-    # edit /opt/gitlab/embedded/service/gitlab-rails/config/gitlab.yml
-    # gitlab.host: ${var_git_hostname}
-    # gitlab.port: ${var_git_http_port}
-    # gitlab.ssh_port: ${var_git_ssh_port}
-    # edit /opt/gitlab/embedded/conf/nginx.conf server.listen server_name.name
-    #gitlab-ctl restart
-    #
-    #/opt/gitlab/embedded/service/gitlab-shell/config.yml
-    #/var/opt/gitlab/gitlab-shell/config.yml
+    local default_git_http_port="80"
+    if [ -f /opt/gitlab/embedded/service/gitlab-rails/config/gitlab.yml ]; then default_git_http_port=$(cat /opt/gitlab/embedded/service/gitlab-rails/config/gitlab.yml | grep port | head -n1 | awk '{print $2}'); fi
+    local default_git_ssh_port="22"
+    if [ -f /assets/sshd_config ]; then default_git_ssh_port=$(cat /assets/sshd_config | grep Port | awk '{print $2}'); fi
 
-    echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> waiting new ports >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+    if [ "${default_git_http_port}" != "${var_git_http_port}" ] || [ "${default_git_ssh_port}" != "${var_git_ssh_port}" ]; then
+        echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> waiting default ports (${default_git_http_port}, ${default_git_ssh_port}) >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+        wait_git_service_up "localhost" "${default_git_http_port}" "${default_git_ssh_port}"
+        wait_http_ok "localhost" "${default_git_http_port}"
+
+        if [ -n "${GITLAB_SHELL_SSH_PORT}" ]; then
+            echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> set ssh port >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+            sed -i "s|^# gitlab_rails\['gitlab_shell_ssh_port'\]|gitlab_rails['gitlab_shell_ssh_port']|g" /etc/gitlab/gitlab.rb
+            sed -i -r "s|(^gitlab_rails\['gitlab_shell_ssh_port'\] = )(.*?)|\1${var_git_ssh_port}|g" /etc/gitlab/gitlab.rb
+            sed -i -r "s|(^Port\s)(.*?)|\1${var_git_ssh_port}|g" /assets/sshd_config
+            #sed -i -r "s|(^Port\s)(.*?)|\1${var_git_ssh_port}|g" /etc/ssh/sshd_config
+            service ssh restart
+        fi
+        if [ -n "${GIT_HTTP_PORT}" ]; then
+            echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> set http port >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+            sed -i "s|^# external_url|external_url|g" /etc/gitlab/gitlab.rb
+            sed -i -r "s|(^external_url ')(.*?)(')|\1http://${var_git_hostname}:${var_git_http_port}\3|g" /etc/gitlab/gitlab.rb
+        fi
+        echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> reconfigure >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+        gitlab-ctl reconfigure
+        if [ -n "${GITLAB_SHELL_SSH_PORT}" ]; then
+            sed -i -r "s|^(\s+ssh_port:\s+)(.*?)|\1${var_git_ssh_port}|g" /opt/gitlab/embedded/service/gitlab-rails/config/gitlab.yml
+        fi
+        echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> restart >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+        gitlab-ctl restart
+        #gitlab-rake gitlab:check
+        #
+        # incorrect
+        # edit /opt/gitlab/embedded/service/gitlab-rails/config/gitlab.yml
+        # gitlab.host: ${var_git_hostname}
+        # gitlab.port: ${var_git_http_port}
+        # gitlab.ssh_port: ${var_git_ssh_port}
+        # edit /opt/gitlab/embedded/conf/nginx.conf server.listen server_name.name
+        #gitlab-ctl restart
+        #
+        #/opt/gitlab/embedded/service/gitlab-shell/config.yml
+        #/var/opt/gitlab/gitlab-shell/config.yml
+    fi
+
+    echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> waiting ports (${var_git_http_port}, ${var_git_ssh_port}) >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
     wait_git_service_up "${var_git_hostname}" "${var_git_http_port}" "${var_git_ssh_port}"
     wait_http_ok "${var_git_hostname}" "${var_git_http_port}"
 
